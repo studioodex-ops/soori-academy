@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "With Soori Academy"
+version = "1.0.0"
+id = "artifacts/soori-academy"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 24246
+
+[services.development]
+run = "pnpm --filter @workspace/soori-academy run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/soori-academy", "run", "build" ]
+publicDir = "artifacts/soori-academy/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "24246"
+BASE_PATH = "/"

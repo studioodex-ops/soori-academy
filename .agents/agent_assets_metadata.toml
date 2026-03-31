@@ -1,0 +1,32 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "n9RRLS-IRl6_JxnmE_SST"
+uri = "file://artifacts/soori-academy/public/images/hero-educator.png"
+type = "image"
+title = "confident Sri Lankan educator presenting"
+
+[[generated]]
+id = "8w8iipZVAWSPKKil2QHKh"
+uri = "file://artifacts/soori-academy/public/images/success-1.png"
+type = "image"
+title = "Sri Lankan young man celebrating"
+
+[[generated]]
+id = "plns2GVV0f41xDLs2PSxx"
+uri = "file://artifacts/soori-academy/public/images/success-2.png"
+type = "image"
+title = "Sri Lankan woman with laptop"
+
+[[generated]]
+id = "nExZi3fY_yIzZ0z23KGMU"
+uri = "file://artifacts/soori-academy/public/images/success-3.png"
+type = "image"
+title = "Sri Lankan student showing phone"
+
+[[generated]]
+id = "95biyo1EUhWO6OCtnJYiW"
+uri = "file://artifacts/soori-academy/public/images/success-4.png"
+type = "image"
+title = "Older Sri Lankan man proud"
