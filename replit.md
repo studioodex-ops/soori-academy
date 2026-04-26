@@ -94,3 +94,11 @@ Generated React Query hooks and fetch client from the OpenAPI spec (e.g. `useHea
 ### `scripts` (`@workspace/scripts`)
 
 Utility scripts package. Each script is a `.ts` file in `src/` with a corresponding npm script in `package.json`. Run scripts via `pnpm --filter @workspace/scripts run <script>`. Scripts can import any workspace package (e.g., `@workspace/db`) by adding it as a dependency in `scripts/package.json`.
+
+## Soori Academy — Site Content Management
+
+The home page (`artifacts/soori-academy/src/pages/home.tsx`) is fully data-driven. Every text and image reads from `siteSettingsTable` (key/value, value is `text` so it can hold base64 data URLs) via `GET /api/settings`. The file ships with a `DEFAULTS` object so the page renders even before any settings are saved.
+
+The admin Site Content tab (`artifacts/soori-academy/src/pages/admin.tsx → SettingsTab`) groups every editable field into collapsible sections (Brand & Links, Hero, Ticker, Stats, Curriculum, How It Works, Success Stories, Schedule — Live, Schedule — Self-Paced, Payment, Form, Footer). Image fields use the `ImageField` component which client-side resizes uploads to ≤1200px JPEG (q 0.85) and stores them as data URLs through `PUT /api/admin/settings`. Express body limit is 25mb in `artifacts/api-server/src/app.ts` to accommodate this.
+
+When a new batch starts, only the "Class Schedule — Live Batch" section needs editing (batch_name, batch_start, course_fee, features, zoom_note).

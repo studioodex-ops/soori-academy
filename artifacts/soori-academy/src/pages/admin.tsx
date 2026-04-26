@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Users, Video, Settings, MessageSquare,
   LogOut, CheckCircle2, XCircle, Clock, Eye, Send, Plus,
   Pencil, Trash2, Save, X, RefreshCw, Copy, ExternalLink,
-  ChevronDown, ChevronUp, Search
+  ChevronDown, ChevronUp, Search, Image as ImageIcon, Upload, Trash
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -591,79 +591,403 @@ function ZoomTab({ token }: { token: string }) {
 }
 
 /* ── SITE SETTINGS TAB ─────────────────────────────────────── */
+type SettingField =
+  | { key: string; label: string; type?: "text"; help?: string }
+  | { key: string; label: string; type: "textarea"; rows?: number; help?: string }
+  | { key: string; label: string; type: "image"; help?: string };
+
+type SettingGroup = { title: string; desc?: string; fields: SettingField[] };
+
 function SettingsTab({ token }: { token: string }) {
   const { toast } = useToast();
   const [settings, setSettings] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({ "Brand & Links": true });
 
-  useEffect(() => {
-    apiFetch("/admin/settings", token).then(r => r.json()).then(setSettings).catch(() => {});
+  const load = useCallback(async () => {
+    const r = await apiFetch("/admin/settings", token);
+    if (r.ok) setSettings(await r.json());
   }, [token]);
+
+  useEffect(() => { load(); }, [load]);
+
+  function update(key: string, value: string) {
+    setSettings(p => ({ ...p, [key]: value }));
+  }
 
   async function save() {
     setSaving(true);
-    await apiFetch("/admin/settings", token, { method: "PUT", body: JSON.stringify(settings) });
-    toast({ title: "Settings saved ✓", description: "The public website will reflect changes on next load." });
+    const r = await apiFetch("/admin/settings", token, { method: "PUT", body: JSON.stringify(settings) });
+    if (r.ok) {
+      toast({ title: "Saved ✓", description: "Changes will appear on the public site after refresh." });
+    } else {
+      toast({ title: "Save failed", description: "Image may be too large. Try a smaller one." });
+    }
     setSaving(false);
   }
 
-  const groups = [
+  const groups: SettingGroup[] = [
+    {
+      title: "Brand & Links",
+      desc:  "Logo, brand name and social media links shown across the site.",
+      fields: [
+        { key: "brand_name",   label: "Brand Name (top-left)" },
+        { key: "brand_tag",    label: "Brand Tag (small badge — e.g. Academy)" },
+        { key: "profile_image",label: "Profile / Logo Image", type: "image", help: "Used in nav and footer (circular)." },
+        { key: "facebook_url", label: "Facebook URL" },
+        { key: "whatsapp_url", label: "WhatsApp Group URL" },
+      ],
+    },
     {
       title: "Hero Section",
-      keys: [
-        { key: "hero_badge", label: "Hero Badge Text" },
-        { key: "hero_headline_1", label: "Headline Line 1" },
-        { key: "hero_headline_2", label: "Headline Line 2 (blue)" },
-        { key: "hero_headline_3", label: "Headline Line 3" },
+      desc:  "The big top section visitors see first.",
+      fields: [
+        { key: "hero_badge",        label: "Top Badge" },
+        { key: "hero_headline_1",   label: "Headline Line 1" },
+        { key: "hero_headline_2",   label: "Headline Line 2 (blue)" },
+        { key: "hero_headline_3",   label: "Headline Line 3" },
+        { key: "hero_description",  label: "Description Paragraph", type: "textarea", rows: 3 },
+        { key: "hero_btn_secondary",label: "Secondary Button Text (e.g. Watch Our Content)" },
+        { key: "hero_image",        label: "Hero Image (right-side photo)", type: "image" },
+        { key: "hero_image_name",   label: "Hero Photo — Name Caption" },
+        { key: "hero_image_role",   label: "Hero Photo — Role Caption" },
+        { key: "hero_ribbon",       label: "Top-right Ribbon (e.g. #1 in Sri Lanka)" },
+        { key: "hero_stat_1",       label: "Trust Line 1 (e.g. 5,000+ students…)" },
+        { key: "hero_stat_2",       label: "Trust Line 2 (e.g. 4.9/5 rating)" },
       ],
     },
     {
-      title: "Class / Batch",
-      keys: [
+      title: "Ticker Bar",
+      desc:  "Scrolling bar of student earnings. One entry per line.",
+      fields: [
+        { key: "ticker_text", label: "Ticker Entries (one per line)", type: "textarea", rows: 6 },
+      ],
+    },
+    {
+      title: "Stats Strip",
+      desc:  "The 4 number tiles below the hero.",
+      fields: [
+        { key: "stat_1_value", label: "Stat 1 — Number" },
+        { key: "stat_1_prefix",label: "Stat 1 — Prefix (e.g. $)" },
+        { key: "stat_1_suffix",label: "Stat 1 — Suffix (e.g. K+, %)" },
+        { key: "stat_1_label", label: "Stat 1 — Label" },
+        { key: "stat_2_value", label: "Stat 2 — Number" },
+        { key: "stat_2_prefix",label: "Stat 2 — Prefix" },
+        { key: "stat_2_suffix",label: "Stat 2 — Suffix" },
+        { key: "stat_2_label", label: "Stat 2 — Label" },
+        { key: "stat_3_value", label: "Stat 3 — Number" },
+        { key: "stat_3_prefix",label: "Stat 3 — Prefix" },
+        { key: "stat_3_suffix",label: "Stat 3 — Suffix" },
+        { key: "stat_3_label", label: "Stat 3 — Label" },
+        { key: "stat_4_value", label: "Stat 4 — Number" },
+        { key: "stat_4_prefix",label: "Stat 4 — Prefix" },
+        { key: "stat_4_suffix",label: "Stat 4 — Suffix" },
+        { key: "stat_4_label", label: "Stat 4 — Label" },
+      ],
+    },
+    {
+      title: "What You Will Learn (Curriculum)",
+      desc:  "Three feature cards explaining the curriculum.",
+      fields: [
+        { key: "curriculum_eyebrow",  label: "Eyebrow (small text above title)" },
+        { key: "curriculum_title",    label: "Section Title" },
+        { key: "curriculum_subtitle", label: "Section Subtitle", type: "textarea", rows: 2 },
+        { key: "learn_1_title", label: "Card 1 — Title" },
+        { key: "learn_1_desc",  label: "Card 1 — Description", type: "textarea", rows: 3 },
+        { key: "learn_2_title", label: "Card 2 — Title" },
+        { key: "learn_2_desc",  label: "Card 2 — Description", type: "textarea", rows: 3 },
+        { key: "learn_3_title", label: "Card 3 — Title" },
+        { key: "learn_3_desc",  label: "Card 3 — Description", type: "textarea", rows: 3 },
+      ],
+    },
+    {
+      title: "How It Works (4 Steps)",
+      fields: [
+        { key: "howit_eyebrow", label: "Eyebrow" },
+        { key: "howit_title",   label: "Section Title" },
+        { key: "step_1_title",  label: "Step 1 — Title" },
+        { key: "step_1_desc",   label: "Step 1 — Description" },
+        { key: "step_2_title",  label: "Step 2 — Title" },
+        { key: "step_2_desc",   label: "Step 2 — Description" },
+        { key: "step_3_title",  label: "Step 3 — Title" },
+        { key: "step_3_desc",   label: "Step 3 — Description" },
+        { key: "step_4_title",  label: "Step 4 — Title" },
+        { key: "step_4_desc",   label: "Step 4 — Description" },
+      ],
+    },
+    {
+      title: "Success Stories (Results)",
+      desc:  "Four student success cards with photo, name, earnings and quote.",
+      fields: [
+        { key: "results_eyebrow",  label: "Eyebrow" },
+        { key: "results_title",    label: "Section Title" },
+        { key: "results_subtitle", label: "Section Subtitle", type: "textarea", rows: 2 },
+        { key: "results_btn",      label: "Button Text" },
+        { key: "success_1_image",  label: "Story 1 — Photo", type: "image" },
+        { key: "success_1_name",   label: "Story 1 — Name" },
+        { key: "success_1_earn",   label: "Story 1 — Earnings (e.g. $1,240/mo)" },
+        { key: "success_1_quote",  label: "Story 1 — Quote", type: "textarea", rows: 2 },
+        { key: "success_2_image",  label: "Story 2 — Photo", type: "image" },
+        { key: "success_2_name",   label: "Story 2 — Name" },
+        { key: "success_2_earn",   label: "Story 2 — Earnings" },
+        { key: "success_2_quote",  label: "Story 2 — Quote", type: "textarea", rows: 2 },
+        { key: "success_3_image",  label: "Story 3 — Photo", type: "image" },
+        { key: "success_3_name",   label: "Story 3 — Name" },
+        { key: "success_3_earn",   label: "Story 3 — Earnings" },
+        { key: "success_3_quote",  label: "Story 3 — Quote", type: "textarea", rows: 2 },
+        { key: "success_4_image",  label: "Story 4 — Photo", type: "image" },
+        { key: "success_4_name",   label: "Story 4 — Name" },
+        { key: "success_4_earn",   label: "Story 4 — Earnings" },
+        { key: "success_4_quote",  label: "Story 4 — Quote", type: "textarea", rows: 2 },
+      ],
+    },
+    {
+      title: "Class Schedule — Live Batch",
+      desc:  "Update each new batch (Batch 14, 15, 16…) here.",
+      fields: [
+        { key: "schedule_eyebrow",  label: "Eyebrow" },
+        { key: "schedule_title",    label: "Section Title" },
+        { key: "schedule_subtitle", label: "Section Subtitle" },
         { key: "batch_name",  label: "Batch Name (e.g. Batch 14 — Live)" },
         { key: "batch_label", label: "Batch Subtitle (e.g. Interactive Zoom Sessions)" },
-        { key: "batch_start", label: "Batch Start Badge (e.g. Starting Soon)" },
+        { key: "batch_start", label: "Batch Badge (e.g. Starting Soon)" },
         { key: "course_fee",  label: "Course Fee (e.g. Rs. 7,000)" },
+        { key: "feature_1", label: "Live Feature 1" },
+        { key: "feature_2", label: "Live Feature 2" },
+        { key: "feature_3", label: "Live Feature 3" },
+        { key: "feature_4", label: "Live Feature 4" },
+        { key: "zoom_note_title", label: "Zoom Note — Title" },
+        { key: "zoom_note_text",  label: "Zoom Note — Description", type: "textarea", rows: 2 },
       ],
     },
     {
-      title: "Class Features",
-      keys: [
-        { key: "feature_1", label: "Feature 1" },
-        { key: "feature_2", label: "Feature 2" },
-        { key: "feature_3", label: "Feature 3" },
-        { key: "feature_4", label: "Feature 4" },
+      title: "Class Schedule — Self-Paced",
+      fields: [
+        { key: "selfpaced_title", label: "Self-Paced Title" },
+        { key: "selfpaced_label", label: "Self-Paced Subtitle" },
+        { key: "selfpaced_feature_1", label: "Self-Paced Feature 1" },
+        { key: "selfpaced_feature_2", label: "Self-Paced Feature 2" },
+        { key: "selfpaced_feature_3", label: "Self-Paced Feature 3" },
+        { key: "selfpaced_feature_4", label: "Self-Paced Feature 4" },
+        { key: "whatsapp_card_title", label: "WhatsApp Card — Title" },
+        { key: "whatsapp_card_text",  label: "WhatsApp Card — Description" },
+      ],
+    },
+    {
+      title: "Payment Section",
+      desc:  "Bank details and enrollment steps shown to visitors.",
+      fields: [
+        { key: "payment_eyebrow",   label: "Eyebrow" },
+        { key: "payment_title",     label: "Section Title" },
+        { key: "payment_subtitle",  label: "Section Subtitle", type: "textarea", rows: 2 },
+        { key: "bank_name",         label: "Bank Name" },
+        { key: "bank_account_no",   label: "Account Number" },
+        { key: "bank_account_name", label: "Account Name" },
+        { key: "bank_branch",       label: "Branch" },
+        { key: "enroll_step_1_title", label: "Enroll Step 1 — Title" },
+        { key: "enroll_step_1_desc",  label: "Enroll Step 1 — Description" },
+        { key: "enroll_step_2_title", label: "Enroll Step 2 — Title" },
+        { key: "enroll_step_2_desc",  label: "Enroll Step 2 — Description" },
+        { key: "enroll_step_3_title", label: "Enroll Step 3 — Title" },
+        { key: "enroll_step_3_desc",  label: "Enroll Step 3 — Description" },
+        { key: "enroll_step_4_title", label: "Enroll Step 4 — Title" },
+        { key: "enroll_step_4_desc",  label: "Enroll Step 4 — Description" },
+      ],
+    },
+    {
+      title: "Registration Form Header",
+      fields: [
+        { key: "form_eyebrow",  label: "Eyebrow" },
+        { key: "form_title",    label: "Title" },
+        { key: "form_subtitle", label: "Subtitle", type: "textarea", rows: 2 },
+      ],
+    },
+    {
+      title: "Footer",
+      fields: [
+        { key: "footer_brand",   label: "Footer Brand Name" },
+        { key: "footer_tagline", label: "Footer Tagline" },
       ],
     },
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <h2 className="text-2xl font-display font-bold text-white flex-1">Site Settings</h2>
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-center gap-3">
+        <h2 className="text-2xl font-display font-bold text-white flex-1">Site Content</h2>
+        <Button variant="ghost" size="sm" onClick={load} style={{ color: "#b0b3b8" }}>
+          <RefreshCw className="w-4 h-4 mr-1" /> Reload
+        </Button>
         <Button size="sm" onClick={save} disabled={saving} className="font-bold rounded-xl text-white border-0" style={{ background: "#1877F2" }}>
-          <Save className="w-4 h-4 mr-1" /> {saving ? "Saving…" : "Save All"}
+          <Save className="w-4 h-4 mr-1" /> {saving ? "Saving…" : "Save All Changes"}
         </Button>
       </div>
       <p className="text-sm" style={{ color: "#b0b3b8" }}>
-        Changes here update what visitors see on the public website. Refresh the main page after saving to see the effect.
+        Edit every text and image on the public website. Click a section to expand. After saving, refresh the main page to see changes.
       </p>
-      {groups.map(g => (
-        <div key={g.title} className="rounded-2xl p-5 space-y-4" style={{ background: "#242526", border: "1px solid #3a3b3c" }}>
-          <p className="font-display font-bold text-white text-sm border-b pb-3" style={{ borderColor: "#3a3b3c" }}>{g.title}</p>
-          {g.keys.map(({ key, label }) => (
-            <div key={key}>
-              <label className="text-xs font-bold uppercase tracking-widest block mb-1.5" style={{ color: "#b0b3b8" }}>{label}</label>
-              <Input
-                value={settings[key] ?? ""}
-                onChange={e => setSettings(p => ({ ...p, [key]: e.target.value }))}
-                className="h-10 rounded-xl text-white border text-sm"
-                style={{ background: "#18191a", borderColor: "#3a3b3c" }}
-              />
-            </div>
-          ))}
-        </div>
-      ))}
+
+      <div className="flex gap-2 flex-wrap">
+        <Button size="sm" variant="ghost" onClick={() => setOpenGroups(Object.fromEntries(groups.map(g => [g.title, true])))}
+          className="text-xs" style={{ color: "#b0b3b8" }}>
+          Expand All
+        </Button>
+        <Button size="sm" variant="ghost" onClick={() => setOpenGroups({})}
+          className="text-xs" style={{ color: "#b0b3b8" }}>
+          Collapse All
+        </Button>
+      </div>
+
+      {groups.map(g => {
+        const open = !!openGroups[g.title];
+        return (
+          <div key={g.title} className="rounded-2xl overflow-hidden" style={{ background: "#242526", border: "1px solid #3a3b3c" }}>
+            <button
+              onClick={() => setOpenGroups(p => ({ ...p, [g.title]: !p[g.title] }))}
+              className="w-full flex items-center gap-3 p-4 text-left transition-colors hover:bg-white/5"
+            >
+              <div className="flex-1">
+                <p className="font-display font-bold text-white text-sm">{g.title}</p>
+                {g.desc && <p className="text-xs mt-0.5" style={{ color: "#65676b" }}>{g.desc}</p>}
+              </div>
+              {open ? <ChevronUp className="w-4 h-4" style={{ color: "#b0b3b8" }} /> : <ChevronDown className="w-4 h-4" style={{ color: "#b0b3b8" }} />}
+            </button>
+            <AnimatePresence>
+              {open && (
+                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
+                  className="overflow-hidden">
+                  <div className="px-5 pb-5 pt-2 space-y-4 border-t" style={{ borderColor: "#3a3b3c" }}>
+                    {g.fields.map(f => (
+                      <SettingFieldRow key={f.key} field={f} value={settings[f.key] ?? ""} onChange={v => update(f.key, v)} />
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        );
+      })}
+
+      <div className="sticky bottom-4 flex justify-end pt-2">
+        <Button onClick={save} disabled={saving} className="font-bold rounded-xl text-white border-0 h-11 px-6 shadow-xl"
+          style={{ background: "#1877F2" }}>
+          <Save className="w-4 h-4 mr-2" /> {saving ? "Saving…" : "Save All Changes"}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function SettingFieldRow({ field, value, onChange }: { field: SettingField; value: string; onChange: (v: string) => void }) {
+  const labelEl = (
+    <label className="text-xs font-bold uppercase tracking-widest block mb-1.5" style={{ color: "#b0b3b8" }}>{field.label}</label>
+  );
+  const helpEl = field.help ? <p className="text-[11px] mt-1" style={{ color: "#65676b" }}>{field.help}</p> : null;
+
+  if (field.type === "textarea") {
+    return (
+      <div>
+        {labelEl}
+        <textarea
+          value={value}
+          rows={field.rows ?? 3}
+          onChange={e => onChange(e.target.value)}
+          className="w-full rounded-xl px-3 py-2 text-sm text-white resize-y focus:outline-none focus:border-[#1877F2] border"
+          style={{ background: "#18191a", borderColor: "#3a3b3c" }}
+        />
+        {helpEl}
+      </div>
+    );
+  }
+
+  if (field.type === "image") {
+    return (
+      <div>
+        {labelEl}
+        <ImageField value={value} onChange={onChange} />
+        {helpEl}
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      {labelEl}
+      <Input
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        className="h-10 rounded-xl text-white border text-sm"
+        style={{ background: "#18191a", borderColor: "#3a3b3c" }}
+      />
+      {helpEl}
+    </div>
+  );
+}
+
+function ImageField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const { toast } = useToast();
+  const [busy, setBusy] = useState(false);
+
+  function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: "Image too large", description: "Please use an image under 5MB." });
+      return;
+    }
+    setBusy(true);
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const dataUrl = ev.target?.result as string;
+      // Resize via canvas if very large to keep DB small
+      const img = new Image();
+      img.onload = () => {
+        const MAX = 1200;
+        let { width, height } = img;
+        if (width > MAX || height > MAX) {
+          const scale = Math.min(MAX / width, MAX / height);
+          width = Math.round(width * scale);
+          height = Math.round(height * scale);
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = width; canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) { onChange(dataUrl); setBusy(false); return; }
+        ctx.drawImage(img, 0, 0, width, height);
+        const out = canvas.toDataURL("image/jpeg", 0.85);
+        onChange(out);
+        setBusy(false);
+      };
+      img.onerror = () => { onChange(dataUrl); setBusy(false); };
+      img.src = dataUrl;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  return (
+    <div className="flex items-center gap-3">
+      <div
+        className="w-20 h-20 rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0"
+        style={{ background: "#18191a", border: "1px solid #3a3b3c" }}
+      >
+        {value
+          ? <img src={value} alt="" className="w-full h-full object-cover" />
+          : <ImageIcon className="w-7 h-7" style={{ color: "#65676b" }} />}
+      </div>
+      <div className="flex-1 flex flex-col gap-2">
+        <label className="cursor-pointer">
+          <input type="file" accept="image/*" className="hidden" onChange={handleFile} />
+          <div className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-white border"
+            style={{ background: busy ? "#3a3b3c" : "#1877F2", borderColor: "#1877F2" }}>
+            <Upload className="w-3.5 h-3.5" /> {busy ? "Processing…" : value ? "Replace Image" : "Upload Image"}
+          </div>
+        </label>
+        {value && (
+          <button onClick={() => onChange("")}
+            className="inline-flex items-center gap-1 text-xs font-medium self-start" style={{ color: "#ef4444" }}>
+            <Trash className="w-3.5 h-3.5" /> Remove
+          </button>
+        )}
+      </div>
     </div>
   );
 }

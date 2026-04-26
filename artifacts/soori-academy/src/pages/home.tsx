@@ -4,10 +4,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import {
-  ArrowRight, CheckCircle2, Zap, TrendingUp, MonitorPlay,
-  Copy, ExternalLink, Video, CreditCard, Lock, Upload,
+  ArrowRight, CheckCircle2, TrendingUp, MonitorPlay,
+  Copy, ExternalLink, Video, CreditCard, Upload,
   ChevronRight, BadgeCheck, Banknote, Globe, PlayCircle,
-  Star, Users, MessageCircleMore
+  Star, Users
 } from "lucide-react";
 import { SiFacebook, SiWhatsapp, SiZoom } from "react-icons/si";
 
@@ -21,34 +21,127 @@ import { Card, CardContent } from "@/components/ui/card";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import sooriProfile from "@assets/channels4_profile_1774983180425.jpg";
-
-const FACEBOOK_PAGE   = "https://web.facebook.com/withsooriacademy";
-const WHATSAPP_GROUP  = "https://chat.whatsapp.com/KomGpoFV4JQ4ls1KrpVsM9?mode=gi_t";
-const BANK_NAME       = "Sampath Bank";
-const BANK_ACCOUNT_NO = "107052850407";
-const BANK_ACCOUNT_NAME = "S V G A Sooriyapura";
-const BANK_BRANCH     = "Gregory Road, Colombo 7";
+import sooriProfileDefault from "@assets/channels4_profile_1774983180425.jpg";
 
 type SiteSettings = Record<string, string>;
 
+const DEFAULTS: SiteSettings = {
+  // Brand / Nav
+  brand_name:        "With Soori",
+  brand_tag:         "Academy",
+  profile_image:     "",
+  // Social links
+  facebook_url:      "https://web.facebook.com/withsooriacademy",
+  whatsapp_url:      "https://chat.whatsapp.com/KomGpoFV4JQ4ls1KrpVsM9?mode=gi_t",
+
+  // Hero
+  hero_badge:        "Sri Lanka's #1 Facebook Monetization Academy",
+  hero_headline_1:   "Turn Your",
+  hero_headline_2:   "Facebook Content",
+  hero_headline_3:   "Into Income.",
+  hero_description:  "Learn directly from Soori — the first educator in Sri Lanka to teach Facebook In-Stream Ads and Content Monetization. Real methods, verified results, open to students worldwide.",
+  hero_btn_secondary:"Watch Our Content",
+  hero_image:        "",
+  hero_image_name:   "Soori",
+  hero_image_role:   "Founder & Lead Instructor — With Soori Academy",
+  hero_ribbon:       "#1 in Sri Lanka",
+  hero_stat_1:       "5,000+ students from 10+ countries",
+  hero_stat_2:       "4.9 / 5 rating",
+
+  // Ticker (one entry per line)
+  ticker_text:       "Kasun — $1,240/mo\nNishanthi — $850/mo\nDasun — $2,100/mo\nChaminda — $1,500/mo\nSaman — $920/mo\nDilani — $1,750/mo\nRuwan — $3,200/mo\nAnusha — $680/mo",
+
+  // Stats (4)
+  stat_1_value:      "5", stat_1_suffix: "K+", stat_1_prefix: "", stat_1_label: "Active Students",
+  stat_2_value:      "1", stat_2_suffix: "M+", stat_2_prefix: "$", stat_2_label: "Earned by Students",
+  stat_3_value:      "10",stat_3_suffix: "+",  stat_3_prefix: "", stat_3_label: "Countries",
+  stat_4_value:      "100",stat_4_suffix:"%",  stat_4_prefix: "", stat_4_label: "Practical",
+
+  // Curriculum
+  curriculum_eyebrow:"The Curriculum",
+  curriculum_title:  "What You Will Learn",
+  curriculum_subtitle:"A complete system to activate and grow Facebook Content Monetization — regardless of your current follower count or technical background.",
+  learn_1_title:     "Content Creation",
+  learn_1_desc:      "Create Facebook-optimised videos that drive high watch time and organic reach. Covers formats, lengths, and proven hook strategies.",
+  learn_2_title:     "CM Tool Mastery",
+  learn_2_desc:      "Navigate the Content Monetization dashboard. Understand RPM, ad break placement, and how to increase earnings per 1,000 views.",
+  learn_3_title:     "Global Audience",
+  learn_3_desc:      "Target Tier 1 audiences (US, UK, Canada) for significantly higher CPMs. Scale beyond local reach into international income.",
+
+  // How it works
+  howit_eyebrow:     "Step by Step",
+  howit_title:       "Your Path to Monetization",
+  step_1_title:      "Enroll",       step_1_desc: "Register and complete payment",
+  step_2_title:      "Learn",        step_2_desc: "Attend live or self-paced sessions",
+  step_3_title:      "Activate CM",  step_3_desc: "Hit Facebook's eligibility criteria",
+  step_4_title:      "Earn Monthly", step_4_desc: "Receive payouts directly from Facebook",
+
+  // Results / Success
+  results_eyebrow:   "Student Success",
+  results_title:     "Real Results. Real People.",
+  results_subtitle:  "Verified earnings from students across Sri Lanka who completed our program.",
+  results_btn:       "Watch More Success Videos on Facebook",
+  success_1_name: "Kasun Perera",    success_1_earn: "$1,240/mo", success_1_quote: "My daily vlogs now pay all my bills. This program is the real thing.", success_1_image: "",
+  success_2_name: "Nishanthi Silva", success_2_earn: "$850/mo",   success_2_quote: "No tech background, no problem. The lessons are clear and actionable.", success_2_image: "",
+  success_3_name: "Dasun Fernando",  success_3_earn: "$2,100/mo", success_3_quote: "Hit $2k in 3 months. The CM tool strategy alone was worth 10x the fee.", success_3_image: "",
+  success_4_name: "Chaminda Kumara", success_4_earn: "$1,500/mo", success_4_quote: "I'm 50 years old and I figured it out. Age is no barrier here.", success_4_image: "",
+
+  // Schedule
+  schedule_eyebrow:  "Upcoming",
+  schedule_title:    "Class Schedule",
+  schedule_subtitle: "Seats are limited. Enroll early to secure your place.",
+  batch_name:        "Batch 14 — Live",
+  batch_label:       "Interactive Zoom Sessions",
+  batch_start:       "Starting Soon",
+  course_fee:        "Rs. 7,000",
+  feature_1:         "4-week intensive weekend program",
+  feature_2:         "Live Q&A with Soori every session",
+  feature_3:         "Full recording access lifetime",
+  feature_4:         "Private WhatsApp support group",
+  zoom_note_title:   "Zoom Links & Passcodes",
+  zoom_note_text:    "Session links are sent privately via WhatsApp to enrolled and payment-confirmed students only.",
+  selfpaced_title:   "Self-Paced",
+  selfpaced_label:   "Pre-recorded Portal",
+  selfpaced_feature_1:"Available immediately after payment",
+  selfpaced_feature_2:"40+ structured HD video lessons",
+  selfpaced_feature_3:"Learn on your own schedule",
+  selfpaced_feature_4:"WhatsApp community access",
+  whatsapp_card_title:"Join the WhatsApp Community",
+  whatsapp_card_text: "Get class updates, tips and direct support from Soori",
+
+  // Payment
+  payment_eyebrow:   "Enrollment & Payment",
+  payment_title:     "Payment Details",
+  payment_subtitle:  "Transfer the course fee to the bank account below, then send your receipt to confirm.",
+  bank_name:         "Sampath Bank",
+  bank_account_no:   "107052850407",
+  bank_account_name: "S V G A Sooriyapura",
+  bank_branch:       "Gregory Road, Colombo 7",
+  enroll_step_1_title:"Fill the registration form",
+  enroll_step_1_desc: "Enter your name, phone, email and batch.",
+  enroll_step_2_title:"Transfer the course fee",
+  enroll_step_2_desc: "Send the course fee to the bank details on the left.",
+  enroll_step_3_title:"Upload or WhatsApp your receipt",
+  enroll_step_3_desc: "Submit a photo of your bank slip to confirm payment.",
+  enroll_step_4_title:"Get confirmed",
+  enroll_step_4_desc: "We will send your class access within 24 hours.",
+
+  // Form
+  form_eyebrow:      "Get Started",
+  form_title:        "Reserve Your Spot",
+  form_subtitle:     "Fill in your details and our team will contact you within 24 hours on WhatsApp.",
+
+  // Footer
+  footer_brand:      "With Soori Academy",
+  footer_tagline:    "Sri Lanka's #1 Facebook Monetization Educator",
+};
+
 function useSiteSettings(): SiteSettings {
-  const [s, setS] = useState<SiteSettings>({
-    batch_name:      "Batch 14 — Live",
-    batch_label:     "Interactive Zoom Sessions",
-    batch_start:     "Starting Soon",
-    course_fee:      "Rs. 7,000",
-    feature_1:       "4-week intensive weekend program",
-    feature_2:       "Live Q&A with Soori every session",
-    feature_3:       "Full recording access lifetime",
-    feature_4:       "Private WhatsApp support group",
-    hero_badge:      "Sri Lanka's #1 Facebook Monetization Academy",
-    hero_headline_1: "Turn Your",
-    hero_headline_2: "Facebook Content",
-    hero_headline_3: "Into Income.",
-  });
+  const [s, setS] = useState<SiteSettings>(DEFAULTS);
   useEffect(() => {
-    fetch("/api/settings").then(r => r.ok ? r.json() : null).then(data => { if (data) setS(prev => ({ ...prev, ...data })); }).catch(() => {});
+    fetch("/api/settings").then(r => r.ok ? r.json() : null).then(data => {
+      if (data) setS(prev => ({ ...prev, ...data }));
+    }).catch(() => {});
   }, []);
   return s;
 }
@@ -99,7 +192,9 @@ function CopyBtn({ text, label }: { text: string; label: string }) {
 }
 
 /* ── RECEIPT UPLOAD STEP ── shown after successful registration */
-function ReceiptUpload({ studentId, courseFee, onDone }: { studentId: number; courseFee: string; onDone: () => void }) {
+function ReceiptUpload({ studentId, courseFee, settings, onDone }: {
+  studentId: number; courseFee: string; settings: SiteSettings; onDone: () => void;
+}) {
   const { toast } = useToast();
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
@@ -142,10 +237,10 @@ function ReceiptUpload({ studentId, courseFee, onDone }: { studentId: number; co
 
       <div className="space-y-3 text-left mb-6">
         {[
-          { label: "Account Number", val: BANK_ACCOUNT_NO, copy: true },
-          { label: "Account Name",   val: BANK_ACCOUNT_NAME, copy: true },
-          { label: "Bank",           val: BANK_NAME, copy: false },
-          { label: "Branch",         val: BANK_BRANCH, copy: false },
+          { label: "Account Number", val: settings.bank_account_no, copy: true },
+          { label: "Account Name",   val: settings.bank_account_name, copy: true },
+          { label: "Bank",           val: settings.bank_name, copy: false },
+          { label: "Branch",         val: settings.bank_branch, copy: false },
         ].map(r => (
           <div key={r.label} className="rounded-xl px-4 py-3 flex items-center justify-between" style={{ background: "#18191a", border: "1px solid #3a3b3c" }}>
             <div>
@@ -171,7 +266,7 @@ function ReceiptUpload({ studentId, courseFee, onDone }: { studentId: number; co
             {uploading ? "Uploading…" : "Submit Receipt"}
           </Button>
         )}
-        <a href={WHATSAPP_GROUP} target="_blank" rel="noopener noreferrer">
+        <a href={settings.whatsapp_url} target="_blank" rel="noopener noreferrer">
           <Button variant="outline" className="w-full h-12 font-bold rounded-xl border text-white" style={{ borderColor: "#25D366", color: "#25D366", background: "transparent" }}>
             <SiWhatsapp className="mr-2 w-4 h-4" /> Send Receipt via WhatsApp Instead
           </Button>
@@ -216,8 +311,47 @@ export default function Home() {
   }
 
   const scrollTo = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
-  const courseFee = settings.course_fee ?? "Rs. 7,000";
-  const features = [settings.feature_1, settings.feature_2, settings.feature_3, settings.feature_4].filter(Boolean);
+
+  const courseFee = settings.course_fee;
+  const profileImg = settings.profile_image || sooriProfileDefault;
+  const heroImg    = settings.hero_image    || sooriProfileDefault;
+  const features   = [settings.feature_1, settings.feature_2, settings.feature_3, settings.feature_4].filter(Boolean);
+  const selfFeatures = [settings.selfpaced_feature_1, settings.selfpaced_feature_2, settings.selfpaced_feature_3, settings.selfpaced_feature_4].filter(Boolean);
+  const tickerItems = settings.ticker_text.split("\n").map(s => s.trim()).filter(Boolean);
+
+  const stats = [
+    { value: parseInt(settings.stat_1_value) || 0, prefix: settings.stat_1_prefix, suffix: settings.stat_1_suffix, label: settings.stat_1_label },
+    { value: parseInt(settings.stat_2_value) || 0, prefix: settings.stat_2_prefix, suffix: settings.stat_2_suffix, label: settings.stat_2_label },
+    { value: parseInt(settings.stat_3_value) || 0, prefix: settings.stat_3_prefix, suffix: settings.stat_3_suffix, label: settings.stat_3_label },
+    { value: parseInt(settings.stat_4_value) || 0, prefix: settings.stat_4_prefix, suffix: settings.stat_4_suffix, label: settings.stat_4_label },
+  ];
+
+  const learnCards = [
+    { icon: <MonitorPlay className="w-6 h-6" />, title: settings.learn_1_title, desc: settings.learn_1_desc },
+    { icon: <TrendingUp className="w-6 h-6" />,  title: settings.learn_2_title, desc: settings.learn_2_desc },
+    { icon: <Globe className="w-6 h-6" />,        title: settings.learn_3_title, desc: settings.learn_3_desc },
+  ];
+
+  const steps = [
+    { n: "01", t: settings.step_1_title, d: settings.step_1_desc },
+    { n: "02", t: settings.step_2_title, d: settings.step_2_desc },
+    { n: "03", t: settings.step_3_title, d: settings.step_3_desc },
+    { n: "04", t: settings.step_4_title, d: settings.step_4_desc },
+  ];
+
+  const successStories = [1, 2, 3, 4].map(i => ({
+    name:  settings[`success_${i}_name`],
+    earn:  settings[`success_${i}_earn`],
+    quote: settings[`success_${i}_quote`],
+    image: settings[`success_${i}_image`],
+  }));
+
+  const enrollSteps = [
+    { n: "1", t: settings.enroll_step_1_title, d: settings.enroll_step_1_desc },
+    { n: "2", t: settings.enroll_step_2_title, d: settings.enroll_step_2_desc },
+    { n: "3", t: settings.enroll_step_3_title, d: settings.enroll_step_3_desc },
+    { n: "4", t: settings.enroll_step_4_title, d: settings.enroll_step_4_desc },
+  ];
 
   return (
     <div className="min-h-screen overflow-x-hidden" style={{ backgroundColor: "#18191a", color: "#e4e6eb" }}>
@@ -234,13 +368,15 @@ export default function Home() {
       <nav className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 md:px-10 h-16"
         style={{ backgroundColor: "#242526", borderBottom: "1px solid #3a3b3c" }}>
         <div className="flex items-center gap-3">
-          <img src={sooriProfile} alt="Soori" className="w-9 h-9 rounded-full object-cover border-2 border-[#1877F2]" />
+          <img src={profileImg} alt={settings.brand_name} className="w-9 h-9 rounded-full object-cover border-2 border-[#1877F2]" />
           <div className="flex items-center gap-2">
-            <span className="font-display font-bold text-lg text-white tracking-tight">With Soori</span>
-            <span className="hidden sm:inline-block text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border"
-              style={{ color: "#1877F2", borderColor: "rgba(24,119,242,0.4)", background: "rgba(24,119,242,0.1)" }}>
-              Academy
-            </span>
+            <span className="font-display font-bold text-lg text-white tracking-tight">{settings.brand_name}</span>
+            {settings.brand_tag && (
+              <span className="hidden sm:inline-block text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full border"
+                style={{ color: "#1877F2", borderColor: "rgba(24,119,242,0.4)", background: "rgba(24,119,242,0.1)" }}>
+                {settings.brand_tag}
+              </span>
+            )}
           </div>
         </div>
         <div className="hidden md:flex items-center gap-8 text-sm font-medium" style={{ color: "#b0b3b8" }}>
@@ -271,9 +407,7 @@ export default function Home() {
                 {settings.hero_headline_3}
               </h1>
               <p className="text-lg md:text-xl mb-8 max-w-xl mx-auto lg:mx-0 leading-relaxed" style={{ color: "#b0b3b8" }}>
-                Learn directly from Soori — the first educator in Sri Lanka to teach
-                Facebook In-Stream Ads and Content Monetization. Real methods, verified results,
-                open to students worldwide.
+                {settings.hero_description}
               </p>
               <div className="flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start">
                 <Button size="lg" onClick={() => scrollTo("join-now")}
@@ -281,22 +415,26 @@ export default function Home() {
                   style={{ background: "#1877F2" }} data-testid="btn-hero-enroll">
                   Enroll Now — {courseFee} <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
-                <a href={FACEBOOK_PAGE} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto" data-testid="link-hero-fb">
+                <a href={settings.facebook_url} target="_blank" rel="noopener noreferrer" className="w-full sm:w-auto" data-testid="link-hero-fb">
                   <Button size="lg" variant="outline" className="h-13 px-8 text-base font-semibold rounded-xl w-full"
                     style={{ borderColor: "#3a3b3c", color: "#e4e6eb", background: "#242526" }}>
-                    <SiFacebook className="mr-2 w-5 h-5" style={{ color: "#1877F2" }} /> Watch Our Content
+                    <SiFacebook className="mr-2 w-5 h-5" style={{ color: "#1877F2" }} /> {settings.hero_btn_secondary}
                   </Button>
                 </a>
               </div>
-              <div className="mt-8 flex items-center gap-4 justify-center lg:justify-start">
-                <div className="flex items-center gap-2 text-sm font-medium" style={{ color: "#b0b3b8" }}>
-                  <Users className="w-4 h-4" style={{ color: "#1877F2" }} />
-                  <span><strong className="text-white">5,000+</strong> students from 10+ countries</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm font-medium" style={{ color: "#b0b3b8" }}>
-                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                  <span><strong className="text-white">4.9</strong> / 5 rating</span>
-                </div>
+              <div className="mt-8 flex flex-wrap items-center gap-4 justify-center lg:justify-start">
+                {settings.hero_stat_1 && (
+                  <div className="flex items-center gap-2 text-sm font-medium" style={{ color: "#b0b3b8" }}>
+                    <Users className="w-4 h-4" style={{ color: "#1877F2" }} />
+                    <span>{settings.hero_stat_1}</span>
+                  </div>
+                )}
+                {settings.hero_stat_2 && (
+                  <div className="flex items-center gap-2 text-sm font-medium" style={{ color: "#b0b3b8" }}>
+                    <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                    <span>{settings.hero_stat_2}</span>
+                  </div>
+                )}
               </div>
             </motion.div>
 
@@ -305,15 +443,17 @@ export default function Home() {
               <div className="relative w-full max-w-sm">
                 <div className="absolute inset-0 rounded-[2rem] blur-2xl opacity-30" style={{ background: "#1877F2" }} />
                 <div className="relative rounded-[2rem] overflow-hidden border-2" style={{ borderColor: "#1877F2" }}>
-                  <img src={sooriProfile} alt="Soori — Founder, With Soori Academy" className="w-full aspect-square object-cover" />
+                  <img src={heroImg} alt={settings.hero_image_name} className="w-full aspect-square object-cover" />
                   <div className="absolute bottom-0 left-0 right-0 p-5" style={{ background: "linear-gradient(to top, #18191a 0%, transparent 100%)" }}>
-                    <p className="text-white font-display font-bold text-xl">Soori</p>
-                    <p className="text-sm font-medium" style={{ color: "#1877F2" }}>Founder &amp; Lead Instructor — With Soori Academy</p>
+                    <p className="text-white font-display font-bold text-xl">{settings.hero_image_name}</p>
+                    <p className="text-sm font-medium" style={{ color: "#1877F2" }}>{settings.hero_image_role}</p>
                   </div>
                 </div>
-                <div className="absolute -top-4 -right-4 px-4 py-2 rounded-2xl font-bold text-sm text-white shadow-xl" style={{ background: "#1877F2" }}>
-                  #1 in Sri Lanka
-                </div>
+                {settings.hero_ribbon && (
+                  <div className="absolute -top-4 -right-4 px-4 py-2 rounded-2xl font-bold text-sm text-white shadow-xl" style={{ background: "#1877F2" }}>
+                    {settings.hero_ribbon}
+                  </div>
+                )}
               </div>
             </motion.div>
           </div>
@@ -321,32 +461,26 @@ export default function Home() {
       </section>
 
       {/* ── TICKER ── */}
-      <div className="w-full overflow-hidden py-3 border-y" style={{ background: "#1877F2", borderColor: "#166fe5" }}>
-        <div className="animate-marquee flex gap-10 whitespace-nowrap font-display font-bold text-sm tracking-wide text-white">
-          {["Kasun — $1,240/mo","Nishanthi — $850/mo","Dasun — $2,100/mo","Chaminda — $1,500/mo",
-            "Saman — $920/mo","Dilani — $1,750/mo","Ruwan — $3,200/mo","Anusha — $680/mo",
-            "Kasun — $1,240/mo","Nishanthi — $850/mo","Dasun — $2,100/mo","Chaminda — $1,500/mo",
-            "Saman — $920/mo","Dilani — $1,750/mo","Ruwan — $3,200/mo","Anusha — $680/mo"].map((t,i) => (
-            <span key={i} className="flex items-center gap-6">{t} <span className="opacity-40">•</span></span>
-          ))}
+      {tickerItems.length > 0 && (
+        <div className="w-full overflow-hidden py-3 border-y" style={{ background: "#1877F2", borderColor: "#166fe5" }}>
+          <div className="animate-marquee flex gap-10 whitespace-nowrap font-display font-bold text-sm tracking-wide text-white">
+            {[...tickerItems, ...tickerItems].map((t, i) => (
+              <span key={i} className="flex items-center gap-6">{t} <span className="opacity-40">•</span></span>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* ── STATS ── */}
       <section className="py-16 px-4">
         <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-4">
-          {[
-            { val: 5, prefix: "", suffix: "K+", label: "Active Students" },
-            { val: 1, prefix: "$", suffix: "M+", label: "Earned by Students" },
-            { val: 10, prefix: "", suffix: "+", label: "Countries" },
-            { val: 100, prefix: "", suffix: "%", label: "Practical" },
-          ].map((s, i) => (
+          {stats.map((s, i) => (
             <motion.div key={i} className="rounded-2xl p-6 text-center"
               style={{ background: "#242526", border: "1px solid #3a3b3c" }}
               initial="hidden" whileInView="visible" viewport={{ once: true }}
               variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { delay: i * 0.08 } } }}>
               <div className="text-4xl md:text-5xl font-display font-bold text-white mb-1">
-                <AnimatedCounter end={s.val} prefix={s.prefix} suffix={s.suffix} />
+                <AnimatedCounter end={s.value} prefix={s.prefix} suffix={s.suffix} />
               </div>
               <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: "#b0b3b8" }}>{s.label}</p>
             </motion.div>
@@ -358,19 +492,12 @@ export default function Home() {
       <section id="about" className="py-24 px-4">
         <div className="max-w-6xl mx-auto">
           <motion.div className="mb-14" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}>
-            <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: "#1877F2" }}>The Curriculum</p>
-            <h2 className="text-3xl md:text-5xl font-display font-bold text-white mb-4">What You Will Learn</h2>
-            <p className="text-base max-w-2xl" style={{ color: "#b0b3b8" }}>
-              A complete system to activate and grow Facebook Content Monetization —
-              regardless of your current follower count or technical background.
-            </p>
+            <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: "#1877F2" }}>{settings.curriculum_eyebrow}</p>
+            <h2 className="text-3xl md:text-5xl font-display font-bold text-white mb-4">{settings.curriculum_title}</h2>
+            <p className="text-base max-w-2xl" style={{ color: "#b0b3b8" }}>{settings.curriculum_subtitle}</p>
           </motion.div>
           <div className="grid md:grid-cols-3 gap-5">
-            {[
-              { icon: <MonitorPlay className="w-6 h-6" />, title: "Content Creation", desc: "Create Facebook-optimised videos that drive high watch time and organic reach. Covers formats, lengths, and proven hook strategies." },
-              { icon: <TrendingUp className="w-6 h-6" />,  title: "CM Tool Mastery",  desc: "Navigate the Content Monetization dashboard. Understand RPM, ad break placement, and how to increase earnings per 1,000 views." },
-              { icon: <Globe className="w-6 h-6" />,        title: "Global Audience",  desc: "Target Tier 1 audiences (US, UK, Canada) for significantly higher CPMs. Scale beyond local reach into international income." },
-            ].map((f, i) => (
+            {learnCards.map((f, i) => (
               <motion.div key={i} className="rounded-2xl p-7 group" style={{ background: "#242526", border: "1px solid #3a3b3c" }}
                 initial="hidden" whileInView="visible" viewport={{ once: true }}
                 variants={{ hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0, transition: { delay: i * 0.1 } } }}
@@ -389,18 +516,13 @@ export default function Home() {
       <section className="py-24 px-4 border-y" style={{ borderColor: "#3a3b3c", background: "#1c1e1f" }}>
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-14">
-            <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: "#1877F2" }}>Step by Step</p>
-            <h2 className="text-3xl md:text-5xl font-display font-bold text-white">Your Path to Monetization</h2>
+            <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: "#1877F2" }}>{settings.howit_eyebrow}</p>
+            <h2 className="text-3xl md:text-5xl font-display font-bold text-white">{settings.howit_title}</h2>
           </div>
           <div className="relative">
             <div className="absolute top-9 left-0 right-0 h-px hidden md:block" style={{ background: "linear-gradient(to right, transparent, rgba(24,119,242,0.4), transparent)" }} />
             <div className="grid md:grid-cols-4 gap-10 relative z-10">
-              {[
-                { n: "01", t: "Enroll",       d: "Register and complete payment" },
-                { n: "02", t: "Learn",         d: "Attend live or self-paced sessions" },
-                { n: "03", t: "Activate CM",   d: "Hit Facebook's eligibility criteria" },
-                { n: "04", t: "Earn Monthly",  d: "Receive payouts directly from Facebook" },
-              ].map((s, i) => (
+              {steps.map((s, i) => (
                 <div key={i} className="flex flex-col items-center text-center group">
                   <div className="w-[72px] h-[72px] rounded-full flex items-center justify-center font-display font-bold text-xl text-white mb-4 border-2 transition-all"
                     style={{ background: "#242526", borderColor: "#3a3b3c" }}
@@ -422,25 +544,25 @@ export default function Home() {
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
             <div>
-              <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: "#1877F2" }}>Student Success</p>
-              <h2 className="text-3xl md:text-5xl font-display font-bold text-white">Real Results. Real People.</h2>
+              <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: "#1877F2" }}>{settings.results_eyebrow}</p>
+              <h2 className="text-3xl md:text-5xl font-display font-bold text-white">{settings.results_title}</h2>
             </div>
-            <p className="text-sm max-w-sm" style={{ color: "#b0b3b8" }}>
-              Verified earnings from students across Sri Lanka who completed our program.
-            </p>
+            <p className="text-sm max-w-sm" style={{ color: "#b0b3b8" }}>{settings.results_subtitle}</p>
           </div>
           <motion.div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5"
             variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true }}>
-            {[
-              { name: "Kasun Perera",    earn: "$1,240/mo", q: "My daily vlogs now pay all my bills. This program is the real thing.",                img: "/images/success-1.png" },
-              { name: "Nishanthi Silva", earn: "$850/mo",   q: "No tech background, no problem. The lessons are clear and actionable.",               img: "/images/success-2.png" },
-              { name: "Dasun Fernando",  earn: "$2,100/mo", q: "Hit $2k in 3 months. The CM tool strategy alone was worth 10x the fee.",              img: "/images/success-3.png" },
-              { name: "Chaminda Kumara", earn: "$1,500/mo", q: "I'm 50 years old and I figured it out. Age is no barrier here.",                      img: "/images/success-4.png" },
-            ].map((s, i) => (
+            {successStories.map((s, i) => (
               <motion.div key={i} variants={fadeUp}>
                 <Card className="overflow-hidden h-full flex flex-col group" style={{ background: "#242526", border: "1px solid #3a3b3c" }}>
-                  <div className="aspect-square relative overflow-hidden" style={{ background: "#18191a" }}>
-                    <img src={s.img} alt={s.name} className="w-full h-full object-cover opacity-90 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700" />
+                  <div className="aspect-square relative overflow-hidden flex items-center justify-center" style={{ background: "#18191a" }}>
+                    {s.image ? (
+                      <img src={s.image} alt={s.name} className="w-full h-full object-cover opacity-90 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700" />
+                    ) : (
+                      <div className="w-24 h-24 rounded-full flex items-center justify-center text-4xl font-bold text-white"
+                        style={{ background: "rgba(24,119,242,0.2)" }}>
+                        {s.name?.charAt(0) ?? "?"}
+                      </div>
+                    )}
                     <div className="absolute inset-0" style={{ background: "linear-gradient(to top, #18191a 0%, transparent 60%)" }} />
                     <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full text-[10px] font-bold flex items-center gap-1"
                       style={{ background: "rgba(24,119,242,0.9)", color: "#fff" }}>
@@ -452,16 +574,16 @@ export default function Home() {
                     </div>
                   </div>
                   <CardContent className="p-5 flex-1" style={{ background: "#242526" }}>
-                    <p className="text-sm leading-relaxed" style={{ color: "#b0b3b8" }}>"{s.q}"</p>
+                    <p className="text-sm leading-relaxed" style={{ color: "#b0b3b8" }}>"{s.quote}"</p>
                   </CardContent>
                 </Card>
               </motion.div>
             ))}
           </motion.div>
           <motion.div className="mt-10 text-center" initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}>
-            <a href={FACEBOOK_PAGE} target="_blank" rel="noopener noreferrer" data-testid="link-fb-results">
+            <a href={settings.facebook_url} target="_blank" rel="noopener noreferrer" data-testid="link-fb-results">
               <Button className="h-12 px-8 font-bold rounded-xl text-white border-0 text-sm" style={{ background: "#1877F2" }}>
-                <SiFacebook className="mr-2 w-4 h-4" /> Watch More Success Videos on Facebook <ExternalLink className="ml-2 w-4 h-4" />
+                <SiFacebook className="mr-2 w-4 h-4" /> {settings.results_btn} <ExternalLink className="ml-2 w-4 h-4" />
               </Button>
             </a>
           </motion.div>
@@ -472,18 +594,20 @@ export default function Home() {
       <section id="schedule" className="py-24 px-4 border-y" style={{ borderColor: "#3a3b3c", background: "#1c1e1f" }}>
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
-            <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: "#1877F2" }}>Upcoming</p>
-            <h2 className="text-3xl md:text-5xl font-display font-bold text-white mb-3">Class Schedule</h2>
-            <p className="text-sm" style={{ color: "#b0b3b8" }}>Seats are limited. Enroll early to secure your place.</p>
+            <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: "#1877F2" }}>{settings.schedule_eyebrow}</p>
+            <h2 className="text-3xl md:text-5xl font-display font-bold text-white mb-3">{settings.schedule_title}</h2>
+            <p className="text-sm" style={{ color: "#b0b3b8" }}>{settings.schedule_subtitle}</p>
           </div>
           <div className="grid md:grid-cols-2 gap-6">
             {/* Live batch */}
             <motion.div className="rounded-2xl p-8 relative overflow-hidden"
               style={{ background: "#242526", border: "1px solid #1877F2", boxShadow: "0 0 30px rgba(24,119,242,0.1)" }}
               initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} whileHover={{ scale: 1.01 }}>
-              <div className="absolute top-5 right-5 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider" style={{ background: "#1877F2", color: "#fff" }}>
-                {settings.batch_start}
-              </div>
+              {settings.batch_start && (
+                <div className="absolute top-5 right-5 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider" style={{ background: "#1877F2", color: "#fff" }}>
+                  {settings.batch_start}
+                </div>
+              )}
               <div className="flex items-center gap-3 mb-6 mt-2">
                 <div className="w-11 h-11 rounded-xl flex items-center justify-center" style={{ background: "rgba(24,119,242,0.12)", border: "1px solid rgba(24,119,242,0.25)" }}>
                   <Video className="w-5 h-5" style={{ color: "#1877F2" }} />
@@ -494,21 +618,18 @@ export default function Home() {
                 </div>
               </div>
               <ul className="space-y-3 mb-6 text-sm" style={{ color: "#b0b3b8" }}>
-                {features.map(f => (
-                  <li key={f} className="flex items-center gap-2">
+                {features.map((f, i) => (
+                  <li key={i} className="flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 flex-shrink-0" style={{ color: "#1877F2" }} />{f}
                   </li>
                 ))}
               </ul>
-              {/* Zoom link is private — message shown instead */}
               <div className="rounded-xl p-4 mb-5 text-sm" style={{ background: "#18191a", border: "1px solid #3a3b3c" }}>
                 <div className="flex items-center gap-2">
                   <SiZoom className="w-4 h-4 text-[#2D8CFF]" />
-                  <span className="font-semibold text-white text-xs">Zoom Links &amp; Passcodes</span>
+                  <span className="font-semibold text-white text-xs">{settings.zoom_note_title}</span>
                 </div>
-                <p className="text-xs mt-2" style={{ color: "#b0b3b8" }}>
-                  Session links are sent privately via WhatsApp to enrolled and payment-confirmed students only.
-                </p>
+                <p className="text-xs mt-2" style={{ color: "#b0b3b8" }}>{settings.zoom_note_text}</p>
               </div>
               <Button onClick={() => scrollTo("join-now")} className="w-full h-12 text-sm font-bold rounded-xl text-white border-0"
                 style={{ background: "#1877F2" }} data-testid="btn-batch14">
@@ -526,20 +647,20 @@ export default function Home() {
                   <PlayCircle className="w-5 h-5" style={{ color: "#b0b3b8" }} />
                 </div>
                 <div>
-                  <h3 className="text-xl font-display font-bold text-white">Self-Paced</h3>
-                  <p className="text-sm font-medium" style={{ color: "#b0b3b8" }}>Pre-recorded Portal</p>
+                  <h3 className="text-xl font-display font-bold text-white">{settings.selfpaced_title}</h3>
+                  <p className="text-sm font-medium" style={{ color: "#b0b3b8" }}>{settings.selfpaced_label}</p>
                 </div>
               </div>
               <ul className="space-y-3 mb-6 text-sm" style={{ color: "#b0b3b8" }}>
-                {["Available immediately after payment","40+ structured HD video lessons","Learn on your own schedule","WhatsApp community access"].map(t => (
-                  <li key={t} className="flex items-center gap-2">
+                {selfFeatures.map((t, i) => (
+                  <li key={i} className="flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 flex-shrink-0" style={{ color: "#65676b" }} />{t}
                   </li>
                 ))}
               </ul>
               <Button onClick={() => scrollTo("join-now")} className="w-full h-12 text-sm font-bold rounded-xl border"
                 style={{ background: "transparent", borderColor: "#3a3b3c", color: "#e4e6eb" }} data-testid="btn-selfpaced">
-                Enroll — Self-Paced — {courseFee}
+                Enroll — {settings.selfpaced_title} — {courseFee}
               </Button>
             </motion.div>
           </div>
@@ -553,11 +674,11 @@ export default function Home() {
                 <SiWhatsapp className="w-5 h-5 text-[#25D366]" />
               </div>
               <div>
-                <p className="font-bold text-white text-sm">Join the WhatsApp Community</p>
-                <p className="text-xs" style={{ color: "#b0b3b8" }}>Get class updates, tips and direct support from Soori</p>
+                <p className="font-bold text-white text-sm">{settings.whatsapp_card_title}</p>
+                <p className="text-xs" style={{ color: "#b0b3b8" }}>{settings.whatsapp_card_text}</p>
               </div>
             </div>
-            <a href={WHATSAPP_GROUP} target="_blank" rel="noopener noreferrer" data-testid="link-whatsapp">
+            <a href={settings.whatsapp_url} target="_blank" rel="noopener noreferrer" data-testid="link-whatsapp">
               <Button className="font-bold rounded-xl h-10 px-6 text-white border-0 text-sm flex-shrink-0" style={{ background: "#25D366" }}>
                 <SiWhatsapp className="mr-2 w-4 h-4" /> Join Group
               </Button>
@@ -570,11 +691,9 @@ export default function Home() {
       <section id="payment" className="py-24 px-4">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
-            <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: "#1877F2" }}>Enrollment &amp; Payment</p>
-            <h2 className="text-3xl md:text-5xl font-display font-bold text-white mb-3">Payment Details</h2>
-            <p className="text-sm" style={{ color: "#b0b3b8" }}>
-              Transfer the course fee to the bank account below, then send your receipt to confirm.
-            </p>
+            <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: "#1877F2" }}>{settings.payment_eyebrow}</p>
+            <h2 className="text-3xl md:text-5xl font-display font-bold text-white mb-3">{settings.payment_title}</h2>
+            <p className="text-sm" style={{ color: "#b0b3b8" }}>{settings.payment_subtitle}</p>
           </div>
           <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
             {/* Bank card */}
@@ -586,15 +705,15 @@ export default function Home() {
                 </div>
                 <div>
                   <h3 className="text-lg font-display font-bold text-white">Bank Transfer</h3>
-                  <p className="text-sm" style={{ color: "#b0b3b8" }}>{BANK_NAME}</p>
+                  <p className="text-sm" style={{ color: "#b0b3b8" }}>{settings.bank_name}</p>
                 </div>
               </div>
               <div className="space-y-3">
                 {[
-                  { label: "Account Number", val: BANK_ACCOUNT_NO, copy: true },
-                  { label: "Account Name",   val: BANK_ACCOUNT_NAME, copy: true },
-                  { label: "Branch",         val: BANK_BRANCH, copy: false },
-                  { label: "Bank",           val: BANK_NAME, copy: false },
+                  { label: "Account Number", val: settings.bank_account_no, copy: true },
+                  { label: "Account Name",   val: settings.bank_account_name, copy: true },
+                  { label: "Branch",         val: settings.bank_branch, copy: false },
+                  { label: "Bank",           val: settings.bank_name, copy: false },
                 ].map(r => (
                   <div key={r.label} className="rounded-xl px-4 py-3" style={{ background: "#18191a", border: "1px solid #3a3b3c" }}>
                     <p className="text-[10px] font-bold uppercase tracking-widest mb-1" style={{ color: "#65676b" }}>{r.label}</p>
@@ -618,12 +737,7 @@ export default function Home() {
               <div>
                 <h3 className="text-lg font-display font-bold text-white mb-6">How to Enroll</h3>
                 <div className="space-y-5">
-                  {[
-                    { n: "1", t: "Fill the registration form",  d: "Enter your name, phone, email and batch." },
-                    { n: "2", t: "Transfer the course fee",     d: `Send ${courseFee} to the bank details on the left.` },
-                    { n: "3", t: "Upload or WhatsApp your receipt", d: "Submit a photo of your bank slip to confirm payment." },
-                    { n: "4", t: "Get confirmed",               d: "We will send your class access within 24 hours." },
-                  ].map(s => (
+                  {enrollSteps.map(s => (
                     <div key={s.n} className="flex gap-4">
                       <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5"
                         style={{ background: "rgba(24,119,242,0.15)", border: "1px solid rgba(24,119,242,0.35)", color: "#1877F2" }}>
@@ -637,7 +751,7 @@ export default function Home() {
                   ))}
                 </div>
               </div>
-              <a href={WHATSAPP_GROUP} target="_blank" rel="noopener noreferrer" data-testid="link-whatsapp-receipt" className="mt-7">
+              <a href={settings.whatsapp_url} target="_blank" rel="noopener noreferrer" data-testid="link-whatsapp-receipt" className="mt-7">
                 <Button className="w-full h-11 font-bold rounded-xl text-white border-0 text-sm" style={{ background: "#25D366" }}>
                   <SiWhatsapp className="mr-2 w-4 h-4" /> Send Receipt via WhatsApp
                 </Button>
@@ -651,15 +765,13 @@ export default function Home() {
       <section id="join-now" className="py-24 px-4 border-t" style={{ borderColor: "#3a3b3c", background: "#1c1e1f" }}>
         <div className="max-w-md mx-auto">
           <div className="text-center mb-10">
-            <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: "#1877F2" }}>Get Started</p>
-            <h2 className="text-3xl md:text-4xl font-display font-bold text-white mb-3">Reserve Your Spot</h2>
-            <p className="text-sm" style={{ color: "#b0b3b8" }}>
-              Fill in your details and our team will contact you within 24 hours on WhatsApp.
-            </p>
+            <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: "#1877F2" }}>{settings.form_eyebrow}</p>
+            <h2 className="text-3xl md:text-4xl font-display font-bold text-white mb-3">{settings.form_title}</h2>
+            <p className="text-sm" style={{ color: "#b0b3b8" }}>{settings.form_subtitle}</p>
           </div>
 
           {registeredId && !receiptDone ? (
-            <ReceiptUpload studentId={registeredId} courseFee={courseFee} onDone={() => setReceiptDone(true)} />
+            <ReceiptUpload studentId={registeredId} courseFee={courseFee} settings={settings} onDone={() => setReceiptDone(true)} />
           ) : receiptDone ? (
             <motion.div className="rounded-2xl p-10 text-center" style={{ background: "#242526", border: "1px solid #10b981" }}
               initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
@@ -668,7 +780,7 @@ export default function Home() {
               <p className="text-sm mb-6" style={{ color: "#b0b3b8" }}>
                 Your registration and receipt have been submitted. Our team will confirm your enrollment via WhatsApp within 24 hours.
               </p>
-              <a href={WHATSAPP_GROUP} target="_blank" rel="noopener noreferrer">
+              <a href={settings.whatsapp_url} target="_blank" rel="noopener noreferrer">
                 <Button className="font-bold rounded-xl text-white border-0 h-11 px-6" style={{ background: "#25D366" }}>
                   <SiWhatsapp className="mr-2 w-4 h-4" /> Join WhatsApp Community
                 </Button>
@@ -713,7 +825,7 @@ export default function Home() {
                           </FormControl>
                           <SelectContent style={{ background: "#242526", borderColor: "#3a3b3c" }}>
                             <SelectItem value="batch-14">{settings.batch_name}</SelectItem>
-                            <SelectItem value="self-paced">Self-Paced — Pre-recorded Portal</SelectItem>
+                            <SelectItem value="self-paced">{settings.selfpaced_title} — {settings.selfpaced_label}</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -745,18 +857,18 @@ export default function Home() {
       <footer className="border-t py-10 px-4" style={{ borderColor: "#3a3b3c", background: "#18191a" }}>
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-3">
-            <img src={sooriProfile} alt="Soori" className="w-9 h-9 rounded-full object-cover border-2" style={{ borderColor: "#1877F2" }} />
+            <img src={profileImg} alt="Soori" className="w-9 h-9 rounded-full object-cover border-2" style={{ borderColor: "#1877F2" }} />
             <div>
-              <p className="font-display font-bold text-white">With Soori Academy</p>
-              <p className="text-xs" style={{ color: "#65676b" }}>Sri Lanka's #1 Facebook Monetization Educator</p>
+              <p className="font-display font-bold text-white">{settings.footer_brand}</p>
+              <p className="text-xs" style={{ color: "#65676b" }}>{settings.footer_tagline}</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
             {[
-              { href: FACEBOOK_PAGE,  icon: <SiFacebook className="w-5 h-5 text-[#1877F2]" />,  hover: "#1877F2", testId: "link-footer-fb" },
-              { href: WHATSAPP_GROUP, icon: <SiWhatsapp className="w-5 h-5 text-[#25D366]" />,  hover: "#25D366", testId: "link-footer-wa" },
+              { href: settings.facebook_url, icon: <SiFacebook className="w-5 h-5 text-[#1877F2]" />,  testId: "link-footer-fb" },
+              { href: settings.whatsapp_url, icon: <SiWhatsapp className="w-5 h-5 text-[#25D366]" />,  testId: "link-footer-wa" },
             ].map(l => (
-              <a key={l.href} href={l.href} target="_blank" rel="noopener noreferrer" data-testid={l.testId}
+              <a key={l.testId} href={l.href} target="_blank" rel="noopener noreferrer" data-testid={l.testId}
                 className="w-10 h-10 rounded-full flex items-center justify-center transition-colors"
                 style={{ background: "#242526", border: "1px solid #3a3b3c" }}>
                 {l.icon}
@@ -768,7 +880,7 @@ export default function Home() {
             </a>
           </div>
           <p className="text-xs" style={{ color: "#65676b" }}>
-            &copy; {new Date().getFullYear()} With Soori Academy. All rights reserved.
+            &copy; {new Date().getFullYear()} {settings.footer_brand}. All rights reserved.
           </p>
         </div>
       </footer>
