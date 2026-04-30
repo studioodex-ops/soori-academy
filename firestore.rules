@@ -1,0 +1,42 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Site settings - readable by all, writable by admin
+    match /siteSettings/{key} {
+      allow read: if true;
+      allow write: if request.auth != null || request.auth.token.admin == true;
+    }
+
+    // Students - readable/writable by admin only
+    match /students/{studentId} {
+      allow read: if request.auth != null || request.auth.token.admin == true;
+      allow create: if true; // Allow registration
+      allow update: if request.auth != null || request.auth.token.admin == true;
+    }
+
+    // Payments - readable/writable by admin only
+    match /payments/{paymentId} {
+      allow read: if request.auth != null || request.auth.token.admin == true;
+      allow create: if true; // Allow receipt upload
+      allow update: if request.auth != null || request.auth.token.admin == true;
+    }
+
+    // Zoom sessions - readable by admin only
+    match /zoomSessions/{sessionId} {
+      allow read: if request.auth != null || request.auth.token.admin == true;
+      allow write: if request.auth != null || request.auth.token.admin == true;
+    }
+
+    // Admin messages - readable/writable by admin only
+    match /adminMessages/{messageId} {
+      allow read: if request.auth != null || request.auth.token.admin == true;
+      allow write: if request.auth != null || request.auth.token.admin == true;
+    }
+
+    // Admin config - for password verification
+    match /adminConfig/{doc} {
+      allow read: if true;
+      allow write: if false;
+    }
+  }
+}
