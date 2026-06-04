@@ -318,19 +318,28 @@ app.delete("/api/admin/video-sessions/:id", adminOnly, async (req: Request, res:
   }
 });
 
-// Convert Google Drive link to embed URL
-function toEmbedUrl(driveLink: string): string | null {
-  if (!driveLink) return null;
-  const patterns = [
+// Convert Drive/YouTube link to embed URL
+function toEmbedUrl(link: string): string | null {
+  if (!link) return null;
+  
+  // Check for YouTube
+  const ytMatch = link.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
+  if (ytMatch) {
+    return `https://www.youtube.com/embed/${ytMatch[1]}?modestbranding=1&rel=0&showinfo=0&fs=0`;
+  }
+
+  // Check for Google Drive
+  const drivePatterns = [
     /\/file\/d\/([a-zA-Z0-9_-]+)/,
     /[?&]id=([a-zA-Z0-9_-]+)/,
   ];
-  for (const pattern of patterns) {
-    const match = driveLink.match(pattern);
+  for (const pattern of drivePatterns) {
+    const match = link.match(pattern);
     if (match) return `https://drive.google.com/file/d/${match[1]}/preview`;
   }
-  if (/^[a-zA-Z0-9_-]{10,}$/.test(driveLink)) {
-    return `https://drive.google.com/file/d/${driveLink}/preview`;
+  
+  if (/^[a-zA-Z0-9_-]{10,}$/.test(link)) {
+    return `https://drive.google.com/file/d/${link}/preview`;
   }
   return null;
 }
