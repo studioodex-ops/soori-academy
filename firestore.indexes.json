@@ -1,3 +1,13 @@
 {
-  "indexes": []
+  "indexes": [
+    {
+      "collectionGroup": "videoSessions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "medium", "order": "ASCENDING" },
+        { "fieldPath": "isActive", "order": "ASCENDING" },
+        { "fieldPath": "weekNumber", "order": "ASCENDING" }
+      ]
+    }
+  ]
 }

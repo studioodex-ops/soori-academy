@@ -152,6 +152,7 @@ const formSchema = z.object({
   email:   z.string().email({ message: "Please enter a valid email address." }),
   country: z.string().min(2, { message: "Please enter your country." }),
   batch:   z.string().min(1, { message: "Please select a batch." }),
+  medium:  z.string().min(1, { message: "Please select your preferred medium." }),
 });
 
 const fadeUp = {
@@ -285,7 +286,7 @@ export default function Home() {
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: { name: "", phone: "", email: "", country: "", batch: "" },
+    defaultValues: { name: "", phone: "", email: "", country: "", batch: "", medium: "" },
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -384,6 +385,7 @@ export default function Home() {
           <a href="#results"  className="hover:text-white transition-colors">Results</a>
           <a href="#schedule" className="hover:text-white transition-colors">Classes</a>
           <a href="#payment"  className="hover:text-white transition-colors">Payment</a>
+          <a href="/sessions" className="hover:text-[#1877F2] transition-colors font-semibold">My Sessions</a>
         </div>
         <Button onClick={() => scrollTo("join-now")} className="h-9 px-5 text-sm font-bold rounded-lg text-white border-0"
           style={{ background: "#1877F2" }} data-testid="btn-nav-join">
@@ -826,6 +828,27 @@ export default function Home() {
                           <SelectContent style={{ background: "#242526", borderColor: "#3a3b3c" }}>
                             <SelectItem value="batch-14">{settings.batch_name}</SelectItem>
                             <SelectItem value="self-paced">{settings.selfpaced_title} — {settings.selfpaced_label}</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField control={form.control} name="medium"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs font-bold uppercase tracking-widest" style={{ color: "#b0b3b8" }}>Select Medium</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="h-11 rounded-xl text-white border focus:border-[#1877F2]"
+                              style={{ background: "#18191a", borderColor: "#3a3b3c" }} data-testid="select-medium">
+                              <SelectValue placeholder="Choose your preferred medium" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent style={{ background: "#242526", borderColor: "#3a3b3c" }}>
+                            <SelectItem value="sinhala">Sinhala Medium</SelectItem>
+                            <SelectItem value="tamil">Tamil Medium</SelectItem>
+                            <SelectItem value="english">English Medium</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />

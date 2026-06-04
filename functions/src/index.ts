@@ -55,6 +55,7 @@ const studentSchema = z.object({
   email: z.string().email(),
   country: z.string().min(2),
   batch: z.string().min(1),
+  medium: z.string().optional(),
 });
 
 app.post("/api/register", async (req: Request, res: Response) => {
@@ -270,6 +271,205 @@ app.delete("/api/admin/zoom/:sessionId", adminOnly, async (req: Request, res: Re
     res.status(500).json({ error: "Failed to delete zoom session" });
   }
 });
+
+// ============ VIDEO SESSIONS ============
+
+app.get("/api/admin/video-sessions", adminOnly, async (_req: Request, res: Response) => {
+  try {
+    const snap = await db.collection("videoSessions").orderBy("createdAt", "desc").get();
+    res.json(snap.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+  } catch {
+    res.status(500).json({ error: "Failed to fetch video sessions" });
+  }
+});
+
+app.post("/api/admin/video-sessions", adminOnly, async (req: Request, res: Response) => {
+  try {
+    const ref = await db.collection("videoSessions").add({
+      ...req.body,
+      createdAt: new Date().toISOString(),
+    });
+    res.json({ success: true, id: ref.id });
+  } catch {
+    res.status(500).json({ error: "Failed to add video session" });
+  }
+});
+
+app.patch("/api/admin/video-sessions/:id", adminOnly, async (req: Request, res: Response) => {
+  try {
+    const id = getStringParam(req, "id");
+    await db.collection("videoSessions").doc(id).update({
+      ...req.body,
+      updatedAt: new Date().toISOString(),
+    });
+    res.json({ success: true });
+  } catch {
+    res.status(500).json({ error: "Failed to update video session" });
+  }
+});
+
+app.delete("/api/admin/video-sessions/:id", adminOnly, async (req: Request, res: Response) => {
+  try {
+    const id = getStringParam(req, "id");
+    await db.collection("videoSessions").doc(id).delete();
+    res.json({ success: true });
+  } catch {
+    res.status(500).json({ error: "Failed to delete video session" });
+  }
+});
+
+// Convert Google Drive link to embed URL
+function toEmbedUrl(driveLink: string): string | null {
+  if (!driveLink) return null;
+  const patterns = [
+    /\/file\/d\/([a-zA-Z0-9_-]+)/,
+    /[?&]id=([a-zA-Z0-9_-]+)/,
+  ];
+  for (const pattern of patterns) {
+    const match = driveLink.match(pattern);
+    if (match) return `https://drive.google.com/file/d/${match[1]}/preview`;
+  }
+  if (/^[a-zA-Z0-9_-]{10,}$/.test(driveLink)) {
+    return `https://drive.google.com/file/d/${driveLink}/preview`;
+  }
+  return null;
+}
+
+// Student verification by phone number
+app.post("/api/verify-student", async (req: Request, res: Response) => {
+  try {
+    const { phone } = req.body as { phone: string };
+    if (!phone) return res.json({ verified: false });
+
+    const normalizedPhone = phone.replace(/\D/g, "");
+    let snap = await db.collection("students").where("phone", "==", normalizedPhone).limit(1).get();
+
+    if (snap.empty) {
+      snap = await db.collection("students").where("phone", "==", phone).limit(1).get();
+      if (snap.empty) return res.json({ verified: false });
+    }
+
+    const doc = snap.docs[0];
+    const student = doc.data();
+    if (student?.status !== "approved") return res.json({ verified: false, reason: "not_approved" });
+
+    res.json({
+      verified: true,
+      studentId: doc.id,
+      name: student.name,
+      medium: student.medium || "sinhala",
+    });
+  } catch {
+    res.json({ verified: false });
+  }
+});
+
+// Student middleware
+async function verifyStudent(req: Request, res: Response, next: express.NextFunction) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Student ")) {
+    return res.status(401).json({ error: "Student verification required" });
+  }
+  try {
+    const token = authHeader.replace("Student ", "");
+    const data = JSON.parse(Buffer.from(token, "base64").toString()) as {
+      phone: string; studentId: string; name: string; medium: string; batch?: string;
+    };
+
+    const studentDoc = await db.collection("students").doc(data.studentId).get();
+    if (!studentDoc.exists) return res.status(401).json({ error: "Invalid session" });
+
+    const student = studentDoc.data();
+    if (student?.phone !== data.phone || student?.status !== "approved") {
+      return res.status(401).json({ error: "Session expired or unauthorized" });
+    }
+
+    (req as any).student = {
+      studentId: data.studentId,
+      name: student.name,
+      phone: student.phone,
+      medium: student.medium,
+      batch: student.batch,
+    };
+    next();
+  } catch {
+    res.status(401).json({ error: "Invalid session token" });
+  }
+}
+
+// Get video sessions for verified students
+app.get("/api/video-sessions", verifyStudent, async (req: Request, res: Response) => {
+  try {
+    const student = (req as any).student;
+    const medium = (req.query.medium as string) || student.medium || "sinhala";
+
+    const snap = await db.collection("videoSessions")
+      .where("medium", "==", medium)
+      .where("isActive", "==", true)
+      .orderBy("weekNumber", "asc")
+      .get();
+
+    const sessions = snap.docs.map((doc) => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        title: data.title,
+        weekNumber: data.weekNumber,
+        description: data.description,
+        medium: data.medium,
+        embedUrl: toEmbedUrl(data.driveLink),
+      };
+    });
+    res.json(sessions);
+  } catch {
+    res.json([]);
+  }
+});
+
+// Get active zoom sessions for student
+app.get("/api/zoom-sessions", verifyStudent, async (req: Request, res: Response) => {
+  try {
+    const student = (req as any).student;
+    const snap = await db.collection("zoomSessions")
+      .where("isActive", "==", true)
+      .orderBy("createdAt", "desc")
+      .get();
+    
+    const sessions = snap.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .filter((d: any) => !d.batch || d.batch === student.batch || student.batch === "self-paced")
+      .map((d: any) => ({
+        id: d.id,
+        title: d.title,
+        weekNumber: d.weekNumber,
+        batch: d.batch,
+        passcode: d.passcode
+      }));
+    res.json(sessions);
+  } catch (err) {
+    res.json([]);
+  }
+});
+
+// Join zoom session securely
+app.post("/api/join-zoom/:id", verifyStudent, async (req: Request, res: Response) => {
+  try {
+    const id = getStringParam(req, "id");
+    const doc = await db.collection("zoomSessions").doc(id).get();
+    if (!doc.exists) {
+      return res.status(404).json({ error: "Not found" });
+    }
+    const data = doc.data();
+    if (!data?.isActive) {
+      return res.status(403).json({ error: "Session inactive" });
+    }
+    res.json({ url: data.zoomLink });
+  } catch {
+    res.status(500).json({ error: "Failed" });
+  }
+});
+
+// ============ SETTINGS ============
 
 app.get("/api/admin/settings", adminOnly, async (_req: Request, res: Response) => {
   try {

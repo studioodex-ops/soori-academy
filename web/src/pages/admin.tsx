@@ -4,7 +4,8 @@ import {
   LayoutDashboard, Users, Video, Settings, MessageSquare,
   LogOut, CheckCircle2, XCircle, Clock, Eye, Send, Plus,
   Pencil, Trash2, Save, X, RefreshCw, Copy, ExternalLink,
-  ChevronDown, ChevronUp, Search, Image as ImageIcon, Upload, Trash
+  ChevronDown, ChevronUp, Search, Image as ImageIcon, Upload, Trash,
+  MonitorPlay
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +14,7 @@ import { signInWithGoogle, logOut, onAuthChange, auth, ADMIN_EMAILS } from "@/li
 
 const API = "/api";
 
-type Tab = "dashboard" | "students" | "zoom" | "settings" | "messages";
+type Tab = "dashboard" | "students" | "zoom" | "videos" | "settings" | "messages";
 
 type Student = {
   id: string; name: string; phone: string; email?: string; country?: string;
@@ -23,6 +24,10 @@ type Student = {
 type ZoomSession = {
   id: string; batch: string; weekNumber: number; title?: string;
   zoomLink?: string; passcode?: string; isActive: boolean;
+};
+type VideoSession = {
+  id: string; title: string; weekNumber: number; description: string;
+  driveLink: string; medium: "sinhala" | "tamil" | "english"; isActive: boolean;
 };
 type Stats = { total: number; pending: number; approved: number; rejected: number };
 
@@ -150,6 +155,7 @@ function Dashboard({ token }: { token: string }) {
         <ul className="space-y-2 text-sm" style={{ color: "#b0b3b8" }}>
           <li className="flex gap-2"><CheckCircle2 className="w-4 h-4 text-[#1877F2] flex-shrink-0 mt-0.5" /> <span><strong className="text-white">Students</strong> — View registrations, approve/reject payments, view receipt photos, add notes.</span></li>
           <li className="flex gap-2"><CheckCircle2 className="w-4 h-4 text-[#1877F2] flex-shrink-0 mt-0.5" /> <span><strong className="text-white">Zoom Sessions</strong> — Add/edit Zoom links and passcodes per week. Links are only visible here and sent manually to students.</span></li>
+          <li className="flex gap-2"><CheckCircle2 className="w-4 h-4 text-[#1877F2] flex-shrink-0 mt-0.5" /> <span><strong className="text-white">Video Sessions</strong> — Upload Google Drive video links per medium (Sinhala/Tamil/English). Students access these via phone verification on the website — links are never exposed.</span></li>
           <li className="flex gap-2"><CheckCircle2 className="w-4 h-4 text-[#1877F2] flex-shrink-0 mt-0.5" /> <span><strong className="text-white">Site Settings</strong> — Change the batch name, course features, and fee shown on the public website.</span></li>
           <li className="flex gap-2"><CheckCircle2 className="w-4 h-4 text-[#1877F2] flex-shrink-0 mt-0.5" /> <span><strong className="text-white">Messages</strong> — Record notes/messages sent to each student.</span></li>
         </ul>
@@ -570,6 +576,159 @@ function ZoomTab({ token }: { token: string }) {
                     )}
                   </div>
                 )}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ── VIDEO SESSIONS TAB ─────────────────────────────────────── */
+function VideoSessionsTab({ token }: { token: string }) {
+  const { toast } = useToast();
+  const [sessions, setSessions] = useState<VideoSession[]>([]);
+  const [medium, setMedium] = useState<"sinhala" | "tamil" | "english">("sinhala");
+  const [editId, setEditId] = useState<string | null>(null);
+  const [showAdd, setShowAdd] = useState(false);
+  const emptyForm = { title: "", weekNumber: 1, description: "", driveLink: "", medium: "sinhala" as const, isActive: true };
+  const [form, setForm] = useState({ ...emptyForm });
+  const [editForm, setEditForm] = useState<VideoSession | null>(null);
+
+  const load = useCallback(async () => {
+    const r = await apiFetch("/admin/video-sessions", token);
+    if (r.ok) setSessions(await r.json());
+  }, [token]);
+
+  useEffect(() => { load(); }, [load]);
+
+  async function addSession() {
+    const r = await apiFetch("/admin/video-sessions", token, {
+      method: "POST", body: JSON.stringify({ ...form, medium, weekNumber: Number(form.weekNumber) }),
+    });
+    if (r.ok) { toast({ title: "Video session added" }); load(); setShowAdd(false); setForm({ ...emptyForm }); }
+  }
+
+  async function saveEdit() {
+    if (!editForm) return;
+    await apiFetch(`/admin/video-sessions/${editForm.id}`, token, {
+      method: "PATCH", body: JSON.stringify(editForm),
+    });
+    toast({ title: "Video session updated" });
+    load(); setEditId(null); setEditForm(null);
+  }
+
+  async function deleteSession(id: string) {
+    if (!confirm("Delete this video session?")) return;
+    await apiFetch(`/admin/video-sessions/${id}`, token, { method: "DELETE" });
+    toast({ title: "Deleted" }); load();
+  }
+
+  const filtered = sessions.filter(s => s.medium === medium);
+
+  const mediums: { id: "sinhala" | "tamil" | "english"; label: string }[] = [
+    { id: "sinhala", label: "Sinhala Medium" },
+    { id: "tamil", label: "Tamil Medium" },
+    { id: "english", label: "English Medium" },
+  ];
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-3 flex-wrap">
+        <h2 className="text-2xl font-display font-bold text-white flex-1">Video Sessions</h2>
+        <Button size="sm" onClick={() => { setShowAdd(v => !v); setForm({ ...emptyForm }); }}
+          className="font-bold rounded-xl text-white border-0" style={{ background: "#1877F2" }}>
+          <Plus className="w-4 h-4 mr-1" /> Add Video
+        </Button>
+        <Button variant="ghost" size="sm" onClick={load} style={{ color: "#b0b3b8" }}>
+          <RefreshCw className="w-4 h-4" />
+        </Button>
+      </div>
+
+      {/* Medium sub-tabs */}
+      <div className="flex gap-2">
+        {mediums.map(m => (
+          <button key={m.id} onClick={() => setMedium(m.id)}
+            className="px-4 py-2 rounded-xl text-xs font-bold transition-colors"
+            style={{ background: medium === m.id ? "#1877F2" : "#242526", color: medium === m.id ? "#fff" : "#b0b3b8", border: "1px solid #3a3b3c" }}>
+            {m.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Add form */}
+      <AnimatePresence>
+        {showAdd && (
+          <motion.div className="rounded-2xl p-5 space-y-3" style={{ background: "#242526", border: "1px solid #1877F2" }}
+            initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}>
+            <p className="font-bold text-white text-sm mb-2">New Video — {mediums.find(m => m.id === medium)?.label}</p>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Week Number" value={String(form.weekNumber)} type="number" onChange={v => setForm(p => ({ ...p, weekNumber: Number(v) }))} />
+            </div>
+            <Field label="Title (e.g. Week 1 — Content Creation Basics)" value={form.title} onChange={v => setForm(p => ({ ...p, title: v }))} />
+            <Field label="Description" value={form.description} onChange={v => setForm(p => ({ ...p, description: v }))} />
+            <Field label="Google Drive Link" value={form.driveLink} onChange={v => setForm(p => ({ ...p, driveLink: v }))} />
+            <p className="text-[11px]" style={{ color: "#65676b" }}>Make sure the Google Drive file is set to "Anyone with the link can view".</p>
+            <div className="flex gap-3">
+              <Button size="sm" onClick={addSession} className="font-bold rounded-xl text-white border-0" style={{ background: "#1877F2" }}>
+                <Save className="w-4 h-4 mr-1" /> Save
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => setShowAdd(false)} style={{ color: "#b0b3b8" }}>Cancel</Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div className="space-y-3">
+        {filtered.length === 0 && <div className="text-center py-12" style={{ color: "#65676b" }}>No video sessions yet for this medium. Add one above.</div>}
+        {filtered.sort((a, b) => a.weekNumber - b.weekNumber).map(s => (
+          <div key={s.id} className="rounded-2xl p-5" style={{ background: "#242526", border: `1px solid ${s.isActive ? "#1877F2" : "#3a3b3c"}` }}>
+            {editId === s.id && editForm ? (
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <Field label="Week Number" value={String(editForm.weekNumber)} type="number" onChange={v => setEditForm(p => p ? { ...p, weekNumber: Number(v) } : null)} />
+                </div>
+                <Field label="Title" value={editForm.title} onChange={v => setEditForm(p => p ? { ...p, title: v } : null)} />
+                <Field label="Description" value={editForm.description} onChange={v => setEditForm(p => p ? { ...p, description: v } : null)} />
+                <Field label="Google Drive Link" value={editForm.driveLink} onChange={v => setEditForm(p => p ? { ...p, driveLink: v } : null)} />
+                <div className="flex items-center gap-3">
+                  <label className="flex items-center gap-2 text-sm text-white cursor-pointer">
+                    <input type="checkbox" checked={editForm.isActive}
+                      onChange={e => setEditForm(p => p ? { ...p, isActive: e.target.checked } : null)} />
+                    Active
+                  </label>
+                  <Button size="sm" onClick={saveEdit} className="font-bold rounded-xl text-white border-0" style={{ background: "#1877F2" }}>
+                    <Save className="w-4 h-4 mr-1" /> Save
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => { setEditId(null); setEditForm(null); }} style={{ color: "#b0b3b8" }}>Cancel</Button>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <div className="flex items-start justify-between gap-4 mb-2">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <MonitorPlay className="w-4 h-4" style={{ color: "#1877F2" }} />
+                      <span className="font-display font-bold text-white">Week {s.weekNumber}: {s.title}</span>
+                      {!s.isActive && <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: "#3a3b3c", color: "#65676b" }}>Inactive</span>}
+                    </div>
+                    {s.description && <p className="text-sm ml-6" style={{ color: "#b0b3b8" }}>{s.description}</p>}
+                  </div>
+                  <div className="flex gap-2 flex-shrink-0">
+                    <button onClick={() => { setEditId(s.id); setEditForm({ ...s }); }}
+                      className="p-2 rounded-lg hover:bg-white/10 transition-colors" title="Edit">
+                      <Pencil className="w-4 h-4" style={{ color: "#b0b3b8" }} />
+                    </button>
+                    <button onClick={() => deleteSession(s.id)}
+                      className="p-2 rounded-lg hover:bg-red-500/10 transition-colors" title="Delete">
+                      <Trash2 className="w-4 h-4 text-red-400" />
+                    </button>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 rounded-xl px-3 py-2 ml-6" style={{ background: "#18191a" }}>
+                  <span className="text-xs flex-1 truncate font-mono" style={{ color: "#b0b3b8" }}>{s.driveLink}</span>
+                </div>
               </div>
             )}
           </div>
@@ -1140,6 +1299,7 @@ export default function AdminPage() {
     { id: "dashboard", label: "Dashboard",     icon: <LayoutDashboard className="w-4 h-4" /> },
     { id: "students",  label: "Students",       icon: <Users className="w-4 h-4" /> },
     { id: "zoom",      label: "Zoom Sessions",  icon: <Video className="w-4 h-4" /> },
+    { id: "videos",    label: "Video Sessions", icon: <MonitorPlay className="w-4 h-4" /> },
     { id: "settings",  label: "Site Settings",  icon: <Settings className="w-4 h-4" /> },
     { id: "messages",  label: "Messages",       icon: <MessageSquare className="w-4 h-4" /> },
   ];
@@ -1210,6 +1370,7 @@ export default function AdminPage() {
               {tab === "dashboard" && <Dashboard token={token} />}
               {tab === "students"  && <StudentsTab token={token} />}
               {tab === "zoom"      && <ZoomTab token={token} />}
+              {tab === "videos"    && <VideoSessionsTab token={token} />}
               {tab === "settings"  && <SettingsTab token={token} />}
               {tab === "messages"  && <MessagesTab token={token} />}
             </motion.div>
