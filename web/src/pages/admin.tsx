@@ -746,15 +746,108 @@ type SettingField =
 
 type SettingGroup = { title: string; desc?: string; fields: SettingField[] };
 
+const DEFAULTS: Record<string, string> = {
+  brand_name:        "With Soori",
+  brand_tag:         "Academy",
+  profile_image:     "",
+  facebook_url:      "https://web.facebook.com/withsooriacademy",
+  whatsapp_url:      "https://chat.whatsapp.com/KomGpoFV4JQ4ls1KrpVsM9?mode=gi_t",
+  hero_badge:        "Sri Lanka's #1 Facebook Monetization Academy",
+  hero_headline_1:   "Turn Your",
+  hero_headline_2:   "Facebook Content",
+  hero_headline_3:   "Into Income.",
+  hero_description:  "Learn directly from Soori — the first educator in Sri Lanka to teach Facebook In-Stream Ads and Content Monetization. Real methods, verified results, open to students worldwide.",
+  hero_btn_secondary:"Watch Our Content",
+  hero_image:        "",
+  hero_image_name:   "Soori",
+  hero_image_role:   "Founder & Lead Instructor — With Soori Academy",
+  hero_ribbon:       "#1 in Sri Lanka",
+  hero_stat_1:       "5,000+ students from 10+ countries",
+  hero_stat_2:       "4.9 / 5 rating",
+  ticker_text:       "Kasun — $1,240/mo\nNishanthi — $850/mo\nDasun — $2,100/mo\nChaminda — $1,500/mo\nSaman — $920/mo\nDilani — $1,750/mo\nRuwan — $3,200/mo\nAnusha — $680/mo",
+  stat_1_value:      "5", stat_1_suffix: "K+", stat_1_prefix: "", stat_1_label: "Active Students",
+  stat_2_value:      "1", stat_2_suffix: "M+", stat_2_prefix: "$", stat_2_label: "Earned by Students",
+  stat_3_value:      "10",stat_3_suffix: "+",  stat_3_prefix: "", stat_3_label: "Countries",
+  stat_4_value:      "100",stat_4_suffix:"%",  stat_4_prefix: "", stat_4_label: "Practical",
+  curriculum_eyebrow:"The Curriculum",
+  curriculum_title:  "What You Will Learn",
+  curriculum_subtitle:"A complete system to activate and grow Facebook Content Monetization — regardless of your current follower count or technical background.",
+  learn_1_title:     "Content Creation",
+  learn_1_desc:      "Create Facebook-optimised videos that drive high watch time and organic reach. Covers formats, lengths, and proven hook strategies.",
+  learn_2_title:     "CM Tool Mastery",
+  learn_2_desc:      "Navigate the Content Monetization dashboard. Understand RPM, ad break placement, and how to increase earnings per 1,000 views.",
+  learn_3_title:     "Global Audience",
+  learn_3_desc:      "Target Tier 1 audiences (US, UK, Canada) for significantly higher CPMs. Scale beyond local reach into international income.",
+  howit_eyebrow:     "Step by Step",
+  howit_title:       "Your Path to Monetization",
+  step_1_title:      "Enroll",       step_1_desc: "Register and complete payment",
+  step_2_title:      "Learn",        step_2_desc: "Attend live or self-paced sessions",
+  step_3_title:      "Activate CM",  step_3_desc: "Hit Facebook's eligibility criteria",
+  step_4_title:      "Earn Monthly", step_4_desc: "Receive payouts directly from Facebook",
+  results_eyebrow:   "Student Success",
+  results_title:     "Real Results. Real People.",
+  results_subtitle:  "Verified earnings from students across Sri Lanka who completed our program.",
+  results_btn:       "Watch More Success Videos on Facebook",
+  success_1_name: "Kasun Perera",    success_1_earn: "$1,240/mo", success_1_quote: "My daily vlogs now pay all my bills. This program is the real thing.", success_1_image: "",
+  success_2_name: "Nishanthi Silva", success_2_earn: "$850/mo",   success_2_quote: "No tech background, no problem. The lessons are clear and actionable.", success_2_image: "",
+  success_3_name: "Dasun Fernando",  success_3_earn: "$2,100/mo", success_3_quote: "Hit $2k in 3 months. The CM tool strategy alone was worth 10x the fee.", success_3_image: "",
+  success_4_name: "Chaminda Kumara", success_4_earn: "$1,500/mo", success_4_quote: "I'm 50 years old and I figured it out. Age is no barrier here.", success_4_image: "",
+  schedule_eyebrow:  "Upcoming",
+  schedule_title:    "Class Schedule",
+  schedule_subtitle: "Seats are limited. Enroll early to secure your place.",
+  batch_name:        "Batch 14 — Live",
+  batch_label:       "Interactive Zoom Sessions",
+  batch_start:       "Starting Soon",
+  course_fee:        "Rs. 7,000",
+  feature_1:         "4-week intensive weekend program",
+  feature_2:         "Live Q&A with Soori every session",
+  feature_3:         "Full recording access lifetime",
+  feature_4:         "Private WhatsApp support group",
+  zoom_note_title:   "Zoom Links & Passcodes",
+  zoom_note_text:    "Session links are sent privately via WhatsApp to enrolled and payment-confirmed students only.",
+  selfpaced_title:   "Self-Paced",
+  selfpaced_label:   "Pre-recorded Portal",
+  selfpaced_feature_1:"Available immediately after payment",
+  selfpaced_feature_2:"40+ structured HD video lessons",
+  selfpaced_feature_3:"Learn on your own schedule",
+  selfpaced_feature_4:"WhatsApp community access",
+  whatsapp_card_title:"Join the WhatsApp Community",
+  whatsapp_card_text: "Get class updates, tips and direct support from Soori",
+  payment_eyebrow:   "Enrollment & Payment",
+  payment_title:     "Payment Details",
+  payment_subtitle:  "Transfer the course fee to the bank account below, then send your receipt to confirm.",
+  bank_name:         "Sampath Bank",
+  bank_account_no:   "107052850407",
+  bank_account_name: "S V G A Sooriyapura",
+  bank_branch:       "Gregory Road, Colombo 7",
+  enroll_step_1_title:"Fill the registration form",
+  enroll_step_1_desc: "Enter your name, phone, email and batch.",
+  enroll_step_2_title:"Transfer the course fee",
+  enroll_step_2_desc: "Send the course fee to the bank details on the left.",
+  enroll_step_3_title:"Upload or WhatsApp your receipt",
+  enroll_step_3_desc: "Submit a photo of your bank slip to confirm payment.",
+  enroll_step_4_title:"Get confirmed",
+  enroll_step_4_desc: "We will send your class access within 24 hours.",
+  form_eyebrow:      "Get Started",
+  form_title:        "Reserve Your Spot",
+  form_subtitle:     "Fill in your details and our team will contact you within 24 hours on WhatsApp.",
+  footer_brand:      "With Soori Academy",
+  footer_tagline:    "Sri Lanka's #1 Facebook Monetization Educator",
+};
+
 function SettingsTab({ token }: { token: string }) {
   const { toast } = useToast();
-  const [settings, setSettings] = useState<Record<string, string>>({});
+  // Initialize with DEFAULTS so empty values are pre-filled
+  const [settings, setSettings] = useState<Record<string, string>>(DEFAULTS);
   const [saving, setSaving] = useState(false);
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({ "Brand & Links": true });
 
   const load = useCallback(async () => {
     const r = await apiFetch("/admin/settings", token);
-    if (r.ok) setSettings(await r.json());
+    if (r.ok) {
+      const data = await r.json();
+      setSettings(prev => ({ ...prev, ...data }));
+    }
   }, [token]);
 
   useEffect(() => { load(); }, [load]);
